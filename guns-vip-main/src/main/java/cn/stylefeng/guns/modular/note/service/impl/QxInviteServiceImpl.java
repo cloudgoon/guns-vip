@@ -337,6 +337,7 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 	 * 确认见面，即约单结束，将金币转给对方
 	 */
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void start(Long inviteId, Long requestUserId) {
 		createInviteOperate(inviteId, requestUserId, INVITE_OPERATE_TYPE.CONFIRM_START);
 		if (checkOtherSideOperate(inviteId, requestUserId, INVITE_OPERATE_TYPE.CONFIRM_START)) {
@@ -400,6 +401,14 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 		} else {
 			payerId = invite.getInvitee();
 			payeeId = invite.getInviter();
+		}
+		int punishCoin = qxCoinHelper.getPunishCoin(invite.getGiftId());
+		if (INVITE_TYPE.ACTIVE.equals(invite.getInviteType())) {
+			// 主动约，退报名人的违约金
+			qxCoinHelper.unfreezeCoin(invite.getInvitee(), punishCoin); // 报名方退回违约金
+		} else {
+			// 被动约，退发起人违约金
+			qxCoinHelper.unfreezeCoin(invite.getInviter(), punishCoin); // 报名方退回违约金
 		}
 		QxPayResult payResult = qxCoinHelper.payCoin(payerId, payeeId, invite.getGiftId(), true);
 		qxPayLogHelper.createPayLog(payResult.getPayerId(), payResult.getPrice(), USER_PAY_LOG_TYPE.INVITE_OUT);
@@ -498,6 +507,7 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 	public void cancel(Long requestUserId, Long inviteId) {
 		QxInvite invite = this.baseMapper.selectById(inviteId);
 		String inviteStatus = invite.getStatus();
+		int punishCoin = qxCoinHelper.getPunishCoin(invite.getGiftId());
 		// 检查状态
 		if (!(INVITE_STATUS.WAIT_MATCH.equals(inviteStatus) || INVITE_STATUS.MATCHED.equals(inviteStatus))) {
 			throw new ServiceException("约单已开始，不能取消");
@@ -506,11 +516,18 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 		if (!invite.getInviter().equals(requestUserId)) {
 			throw new ServiceException("只能取消自己的约单");
 		}
-		// 主动约，解冻发起人金币；被动约，解冻被邀请人金币
-		if (INVITE_TYPE.ACTIVE.equals(invite.getInviteType())) {
-			qxCoinHelper.unfreeze(invite.getInviter(), invite.getGiftId());
+		if (INVITE_STATUS.WAIT_MATCH.equals(inviteStatus)) {
+			// 未配对
+			if (INVITE_TYPE.ACTIVE.equals(invite.getInviteType())) {
+				// 主动约，解冻发起人金币；
+				qxCoinHelper.unfreeze(invite.getInviter(), invite.getGiftId());
+			} else {
+				// 被动约，解冻发起人违约金
+				qxCoinHelper.unfreezeCoin(invite.getInviter(), punishCoin);
+			}
 		} else {
-			qxCoinHelper.unfreeze(invite.getInvitee(), invite.getGiftId());
+			// 已配对，惩罚发起人
+			handleUnstartPunish(invite, PUNISH_REASON.INVITER);
 		}
 		// 取消约单
 		invite.setStatus(INVITE_STATUS.CANCEl);
@@ -559,53 +576,57 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 		queryWrapper.eq("status", INVITE_STATUS.MATCHED).lt("invite_time", DateUtils.addHour(new Date(), -1));
 		List<QxInvite> unfinishedInvites = this.baseMapper.selectList(queryWrapper);
 		for (QxInvite invite : unfinishedInvites) {
-			Long giftId = invite.getGiftId();
-			QxGift gift = qxGiftMapper.selectById(giftId);
-			int punishCoin = qxCoinHelper.getPunishCoin(giftId);
 			String reason = checkPunishReason(invite);
-			if (PUNISH_REASON.BOTH.equals(reason)) {
-				// 发起方，报名方金币原路返回
-				if (INVITE_TYPE.ACTIVE.equals(invite.getInviteType())) {
-					qxCoinHelper.unfreeze(invite.getInviter(), giftId); // 发起方退回礼物
-					qxCoinHelper.unfreezeCoin(invite.getInvitee(), punishCoin); // 报名方退回违约金
-				} else if (INVITE_TYPE.PASSIVE.equals(invite.getInviteType())) {
-					qxCoinHelper.unfreeze(invite.getInvitee(), giftId); // 报名方退回礼物
-					qxCoinHelper.unfreezeCoin(invite.getInviter(), punishCoin); // 发起方退回违约金
-				} else {
-					throw new ServiceException("不支持的约单类型");
-				}
-			} else if (PUNISH_REASON.INVITER.equals(reason)) {
-				if (INVITE_TYPE.ACTIVE.equals(invite.getInviteType())) {
-					// 发起方付违约金给报名方，同时两方解冻剩下的金币
-					qxCoinHelper.payPunishCoin(invite.getInviter(), invite.getInvitee(), punishCoin);
-					qxCoinHelper.unfreezeCoin(invite.getInviter(), gift.getPrice()-punishCoin);
-					
-					qxCoinHelper.unfreezeCoin(invite.getInvitee(), punishCoin);
-				} else if (INVITE_TYPE.PASSIVE.equals(invite.getInviteType())) {
-					// 发起方付违约金给报名方，然后解冻报名方礼物金
-					qxCoinHelper.payPunishCoin(invite.getInviter(), invite.getInvitee(), punishCoin);
-					qxCoinHelper.unfreezeCoin(invite.getInvitee(), gift.getPrice());
-				} else {
-					throw new ServiceException("不支持的约单类型");
-				}
-			} else {
-				if (INVITE_TYPE.ACTIVE.equals(invite.getInviteType())) {
-					// 报名方付违约金给发起方，解冻发起方礼物金额
-					qxCoinHelper.payPunishCoin(invite.getInvitee(), invite.getInviter(), punishCoin);
-					qxCoinHelper.unfreezeCoin(invite.getInviter(), gift.getPrice());
-				} else if (INVITE_TYPE.PASSIVE.equals(invite.getInviteType())) {
-					// 报名方付违约金给发起方，同时两方解冻剩下的金币
-					qxCoinHelper.payPunishCoin(invite.getInvitee(), invite.getInviter(), punishCoin);
-					qxCoinHelper.unfreezeCoin(invite.getInvitee(), gift.getPrice()-punishCoin);
-					
-					qxCoinHelper.unfreezeCoin(invite.getInviter(), punishCoin);
-				} else {
-					throw new ServiceException("不支持的约单类型");
-				}
-			}
-			invite.setStatus(ProjectConstants.INVITE_STATUS.CANCEl);
-			this.baseMapper.updateById(invite);
+			handleUnstartPunish(invite, reason);
 		}
+	}
+	
+	public void handleUnstartPunish(QxInvite invite, String reason) {
+		Long giftId = invite.getGiftId();
+		QxGift gift = qxGiftMapper.selectById(giftId);
+		int punishCoin = qxCoinHelper.getPunishCoin(giftId);
+		if (PUNISH_REASON.BOTH.equals(reason)) {
+			// 发起方，报名方金币原路返回
+			if (INVITE_TYPE.ACTIVE.equals(invite.getInviteType())) {
+				qxCoinHelper.unfreeze(invite.getInviter(), giftId); // 发起方退回礼物
+				qxCoinHelper.unfreezeCoin(invite.getInvitee(), punishCoin); // 报名方退回违约金
+			} else if (INVITE_TYPE.PASSIVE.equals(invite.getInviteType())) {
+				qxCoinHelper.unfreeze(invite.getInvitee(), giftId); // 报名方退回礼物
+				qxCoinHelper.unfreezeCoin(invite.getInviter(), punishCoin); // 发起方退回违约金
+			} else {
+				throw new ServiceException("不支持的约单类型");
+			}
+		} else if (PUNISH_REASON.INVITER.equals(reason)) {
+			if (INVITE_TYPE.ACTIVE.equals(invite.getInviteType())) {
+				// 发起方付违约金给报名方，同时两方解冻剩下的金币
+				qxCoinHelper.payPunishCoin(invite.getInviter(), invite.getInvitee(), punishCoin);
+				qxCoinHelper.unfreezeCoin(invite.getInviter(), gift.getPrice()-punishCoin);
+				
+				qxCoinHelper.unfreezeCoin(invite.getInvitee(), punishCoin);
+			} else if (INVITE_TYPE.PASSIVE.equals(invite.getInviteType())) {
+				// 发起方付违约金给报名方，然后解冻报名方礼物金
+				qxCoinHelper.payPunishCoin(invite.getInviter(), invite.getInvitee(), punishCoin);
+				qxCoinHelper.unfreezeCoin(invite.getInvitee(), gift.getPrice());
+			} else {
+				throw new ServiceException("不支持的约单类型");
+			}
+		} else {
+			if (INVITE_TYPE.ACTIVE.equals(invite.getInviteType())) {
+				// 报名方付违约金给发起方，解冻发起方礼物金额
+				qxCoinHelper.payPunishCoin(invite.getInvitee(), invite.getInviter(), punishCoin);
+				qxCoinHelper.unfreezeCoin(invite.getInviter(), gift.getPrice());
+			} else if (INVITE_TYPE.PASSIVE.equals(invite.getInviteType())) {
+				// 报名方付违约金给发起方，同时两方解冻剩下的金币
+				qxCoinHelper.payPunishCoin(invite.getInvitee(), invite.getInviter(), punishCoin);
+				qxCoinHelper.unfreezeCoin(invite.getInvitee(), gift.getPrice()-punishCoin);
+				
+				qxCoinHelper.unfreezeCoin(invite.getInviter(), punishCoin);
+			} else {
+				throw new ServiceException("不支持的约单类型");
+			}
+		}
+		invite.setStatus(ProjectConstants.INVITE_STATUS.CANCEl);
+		this.baseMapper.updateById(invite);
 	}
 	
 	private String checkPunishReason(QxInvite invite) {
