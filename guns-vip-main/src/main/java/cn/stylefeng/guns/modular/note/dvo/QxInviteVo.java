@@ -19,6 +19,7 @@ public class QxInviteVo {
 	private Long invitee;
 	private Date inviteTime;
 	private String inviteType;
+	private String longitude;
 	private String latitude;
 	private String province;
 	private String city;
