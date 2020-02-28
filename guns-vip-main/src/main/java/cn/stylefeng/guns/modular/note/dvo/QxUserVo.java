@@ -19,6 +19,7 @@ public class QxUserVo {
 	private Integer followeeCount; // 粉丝数
 	private Integer myInviteCount; // 我发起的约单
 	private Integer inviteMeCount; // 邀请我的约单
+	private String inviteCode; // 邀请码
 	
 	public Integer getScore() {
 		return CommonUtils.creditScore(score, ProjectConstants.USER_CREDIT.INITIAL_SCORE);
