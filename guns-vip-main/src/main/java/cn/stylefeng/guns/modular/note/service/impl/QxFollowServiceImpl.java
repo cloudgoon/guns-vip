@@ -3,6 +3,8 @@ package cn.stylefeng.guns.modular.note.service.impl;
 import java.io.Serializable;
 import java.util.List;
 
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -12,6 +14,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import cn.stylefeng.guns.base.pojo.page.LayuiPageFactory;
 import cn.stylefeng.guns.base.pojo.page.LayuiPageInfo;
+import cn.stylefeng.guns.core.constant.ProjectConstants.SMS_CODE;
+import cn.stylefeng.guns.core.util.NoticeHelper;
 import cn.stylefeng.guns.modular.note.entity.QxFollow;
 import cn.stylefeng.guns.modular.note.mapper.QxFollowMapper;
 import cn.stylefeng.guns.modular.note.model.params.QxFollowParam;
@@ -29,7 +33,10 @@ import cn.stylefeng.roses.core.util.ToolUtil;
  */
 @Service
 public class QxFollowServiceImpl extends ServiceImpl<QxFollowMapper, QxFollow> implements QxFollowService {
-
+	
+	@Resource
+	private NoticeHelper noticeHelper;
+	
     @Override
     public void add(QxFollowParam param){
         QxFollow entity = getEntity(param);
@@ -90,6 +97,8 @@ public class QxFollowServiceImpl extends ServiceImpl<QxFollowMapper, QxFollow> i
 		follow.setFollowerId(followerId);
 		follow.setFolloweeId(followeeId);
 		this.baseMapper.insert(follow);
+		// 添加粉丝关注提醒
+		noticeHelper.updateNotify(followeeId, SMS_CODE.FOLLOW);
 	}
 
 	@Override

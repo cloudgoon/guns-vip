@@ -80,6 +80,7 @@ public final class ProjectConstants {
 
 	/**
 	 * 手机验证码: 0-登录/注册验证码;1-约单成功；2-约单失败；3-紧急报警；4-提醒未活跃用户
+	 * 5-点赞；6-打赏；7-评论；8-粉丝关注
 	 * 
 	 * @author steven
 	 *
@@ -90,6 +91,10 @@ public final class ProjectConstants {
 		int INVITE_FAIL = 2;
 		int EMERGENCY = 3;
 		int NOTIFY_UNACTIVE_USERS = 4;
+		int LIKE = 5;
+		int REWARD = 6;
+		int COMMENT = 7;
+		int FOLLOW = 8;
 	}
 
 	/**

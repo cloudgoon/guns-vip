@@ -1,6 +1,7 @@
 package cn.stylefeng.guns.modular.note.service.impl;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -15,18 +16,23 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import cn.stylefeng.guns.base.pojo.page.LayuiPageFactory;
 import cn.stylefeng.guns.base.pojo.page.LayuiPageInfo;
+import cn.stylefeng.guns.core.constant.ProjectConstants.NOTICE_TYPE;
+import cn.stylefeng.guns.core.constant.ProjectConstants.SMS_CODE;
 import cn.stylefeng.guns.core.constant.ProjectConstants.USER_PAY_LOG_TYPE;
 import cn.stylefeng.guns.core.exception.ServiceException;
+import cn.stylefeng.guns.core.util.NoticeHelper;
 import cn.stylefeng.guns.modular.note.dto.QxPayResult;
 import cn.stylefeng.guns.modular.note.entity.QxGift;
 import cn.stylefeng.guns.modular.note.entity.QxNote;
 import cn.stylefeng.guns.modular.note.entity.QxNoteComment;
 import cn.stylefeng.guns.modular.note.entity.QxNoteLike;
+import cn.stylefeng.guns.modular.note.entity.QxUser;
 import cn.stylefeng.guns.modular.note.entity.QxUserNote;
 import cn.stylefeng.guns.modular.note.mapper.QxGiftMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxNoteCommentMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxNoteLikeMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxNoteMapper;
+import cn.stylefeng.guns.modular.note.mapper.QxUserMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxUserNoteMapper;
 import cn.stylefeng.guns.modular.note.model.params.QxNoteParam;
 import cn.stylefeng.guns.modular.note.model.result.QxNoteResult;
@@ -48,6 +54,9 @@ public class QxNoteServiceImpl extends ServiceImpl<QxNoteMapper, QxNote> impleme
 	private QxUserNoteMapper qxUserNoteMapper;
 	
 	@Resource
+	private QxUserMapper qxUserMapper;
+	
+	@Resource
 	private QxCoinHelper qxCoinHelper;
 	
 	@Resource
@@ -61,6 +70,9 @@ public class QxNoteServiceImpl extends ServiceImpl<QxNoteMapper, QxNote> impleme
 	
 	@Resource
 	private QxGiftMapper qxGiftMapper;
+	
+	@Resource
+	private NoticeHelper noticeHelper;
 	
     @Override
     public void add(QxNoteParam param){
@@ -128,6 +140,8 @@ public class QxNoteServiceImpl extends ServiceImpl<QxNoteMapper, QxNote> impleme
 		this.updateById(note);
 		// 自动添加打赏评论
 		addOfficalComment(requestUserId, noteId, giftId, false);
+		// 添加消息
+		noticeHelper.saveNoteNotice(requestUserId, note, SMS_CODE.REWARD);
 	}
 	
 	/**
@@ -188,6 +202,8 @@ public class QxNoteServiceImpl extends ServiceImpl<QxNoteMapper, QxNote> impleme
 		QxNote note = this.getById(noteId);
 		note.setFavoriteCount(note.getFavoriteCount() + 1);
 		this.updateById(note);
+		// 添加消息
+		noticeHelper.saveNoteNotice(requestUserId, note, SMS_CODE.LIKE);
 		
 		return note;
 	}

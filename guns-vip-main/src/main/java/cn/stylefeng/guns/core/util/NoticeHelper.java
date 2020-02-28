@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 
 import cn.stylefeng.guns.config.ConfigEntity;
 import cn.stylefeng.guns.core.DateUtils;
@@ -21,9 +22,12 @@ import cn.stylefeng.guns.core.notice.JPushMsg;
 import cn.stylefeng.guns.core.schedue.threads.ThreadsContext;
 import cn.stylefeng.guns.modular.note.dto.NoticeEmailDto;
 import cn.stylefeng.guns.modular.note.dto.NoticeSmsDto;
+import cn.stylefeng.guns.modular.note.entity.QxNote;
 import cn.stylefeng.guns.modular.note.entity.QxNotice;
+import cn.stylefeng.guns.modular.note.entity.QxNotify;
 import cn.stylefeng.guns.modular.note.entity.QxUser;
 import cn.stylefeng.guns.modular.note.mapper.QxNoticeMapper;
+import cn.stylefeng.guns.modular.note.mapper.QxNotifyMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxUserMapper;
 
 
@@ -46,6 +50,9 @@ public class NoticeHelper {
 	
 	@Autowired
 	private QxUserMapper userMapper;
+	
+	@Autowired
+	private QxNotifyMapper notifyMapper;
 	
     @Resource
     private ThreadsContext threadsContexts;
@@ -75,6 +82,7 @@ public class NoticeHelper {
 		NoticeEmailDto eDto = new NoticeEmailDto(account, tag, pairs);
 		QxNotice notice = saveNotice(account, eDto.getTextBody(configEntity.getTemplate(eDto.getTag(), false)), tag, NOTICE_TYPE.PUSH, date);
 		sendPush(user.getId(), notice.getId(), eDto, extras);
+		updateNotify(user.getId(), tag);
 	}
 	
 	private boolean needCheckInterval(Integer tag) {
@@ -82,6 +90,55 @@ public class NoticeHelper {
 			return true;
 		}
 		return false;
+	}
+	
+	public void saveNoteNotice(Long requestUserId, QxNote note, int tag) {
+		// 添加消息
+		QxUser actionUser = userMapper.selectById(requestUserId);
+		QxUser authorUser = userMapper.selectById(note.getUserId());
+		String content = "";
+		switch (tag) {
+			case SMS_CODE.LIKE:
+				content = actionUser.getNickname() + "点赞了您的日记;note_id=" + note.getId();
+				break;
+			case SMS_CODE.REWARD:
+				content = actionUser.getNickname() + "打赏了您的日记;note_id=" + note.getId();
+				break;
+			case SMS_CODE.COMMENT:
+				content = actionUser.getNickname() + "评论了您的日记;note_id=" + note.getId();
+				break;
+			default:
+				break;
+		}
+		saveNotice(authorUser.getMobile(), content, tag, NOTICE_TYPE.PUSH, new Date());
+		updateNotify(authorUser.getId(), tag);
+	}
+	
+	public void updateNotify(Long userId, int tag) {
+		String column = "";
+		switch(tag) {
+			case SMS_CODE.LIKE:
+				column = "new_like";
+				break;
+			case SMS_CODE.REWARD:
+				column = "new_reward";
+				break;
+			case SMS_CODE.COMMENT:
+				column = "new_comment";
+				break;
+			case SMS_CODE.FOLLOW:
+				column = "new_follow";
+				break;
+			case SMS_CODE.INVITE_FAIL:
+			case SMS_CODE.INVITE_SUCCESS:
+				column = "new_invite";
+				break;
+			default:
+				break;
+		}
+		UpdateWrapper<QxNotify> updateWrapper = new UpdateWrapper<QxNotify>();
+		updateWrapper.eq("user_id", userId).set(column, true);
+		notifyMapper.update(null, updateWrapper);
 	}
 	
 	private QxNotice saveNotice(String account, String context, Integer tag, Integer type, Date date) {

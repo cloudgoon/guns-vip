@@ -18,15 +18,16 @@ import cn.stylefeng.guns.base.pojo.page.LayuiPageFactory;
 import cn.stylefeng.guns.base.pojo.page.LayuiPageInfo;
 import cn.stylefeng.guns.config.ConfigEntity;
 import cn.stylefeng.guns.core.CommonUtils;
-import cn.stylefeng.guns.core.constant.ProjectConstants.SMS_CODE;
 import cn.stylefeng.guns.core.constant.ProjectConstants.SOCIAL_TYPE;
 import cn.stylefeng.guns.core.exception.ServiceException;
 import cn.stylefeng.guns.core.util.NoticeHelper;
 import cn.stylefeng.guns.modular.note.entity.QxBlack;
+import cn.stylefeng.guns.modular.note.entity.QxNotify;
 import cn.stylefeng.guns.modular.note.entity.QxReport;
 import cn.stylefeng.guns.modular.note.entity.QxUser;
 import cn.stylefeng.guns.modular.note.entity.QxUserSocial;
 import cn.stylefeng.guns.modular.note.mapper.QxBlackMapper;
+import cn.stylefeng.guns.modular.note.mapper.QxNotifyMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxReportMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxUserMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxUserSocialMapper;
@@ -52,6 +53,9 @@ public class QxUserServiceImpl extends ServiceImpl<QxUserMapper, QxUser> impleme
 	
 	@Resource
 	private QxUserSocialMapper qxUserSocialMapper;
+	
+	@Resource
+	private QxNotifyMapper qxNotifyMapper;
 
 	@Resource
 	private QxReportMapper qxReportMapper;
@@ -139,6 +143,10 @@ public class QxUserServiceImpl extends ServiceImpl<QxUserMapper, QxUser> impleme
 		user.setMobile(mobile);
 		user.setInviteCode(generateInviteCode());
 		this.baseMapper.insert(user);
+		// 创建用户通知
+		QxNotify notify = new QxNotify();
+		notify.setUserId(user.getId());
+		qxNotifyMapper.insert(notify);
 		return user;
 	}
 

@@ -16,11 +16,15 @@ import cn.stylefeng.guns.base.pojo.page.LayuiPageFactory;
 import cn.stylefeng.guns.config.ConfigEntity;
 import cn.stylefeng.guns.core.DateUtils;
 import cn.stylefeng.guns.core.ResultGenerator;
+import cn.stylefeng.guns.core.constant.ProjectConstants.SMS_CODE;
+import cn.stylefeng.guns.core.util.NoticeHelper;
 import cn.stylefeng.guns.modular.note.dto.QxNoteCommentTo;
 import cn.stylefeng.guns.modular.note.dvo.QxNoteCommentVo;
 import cn.stylefeng.guns.modular.note.dvo.QxTweetCommentVo;
+import cn.stylefeng.guns.modular.note.entity.QxNote;
 import cn.stylefeng.guns.modular.note.entity.QxNoteComment;
 import cn.stylefeng.guns.modular.note.service.QxNoteCommentService;
+import cn.stylefeng.guns.modular.note.service.QxNoteService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -32,7 +36,13 @@ public class ApiNoteCommentController extends ApiBaseController {
 	private ConfigEntity configEntity;
 
 	@Resource
+	private QxNoteService qxNoteService;
+	
+	@Resource
 	private QxNoteCommentService qxNoteCommentService;
+	
+	@Resource
+	private NoticeHelper noticeHelper;
 
 	@RequestMapping("/list")
 	public Object list(Long noteId) {
@@ -70,6 +80,8 @@ public class ApiNoteCommentController extends ApiBaseController {
 		BeanUtils.copyProperties(commentTo, noteComment);
 		noteComment.setCreatedBy(getRequestUserId());
 		qxNoteCommentService.save(noteComment);
+		QxNote note = qxNoteService.getById(commentTo.getNoteId());
+		noticeHelper.saveNoteNotice(getRequestUserId(), note, SMS_CODE.COMMENT);
 		log.info("/api/note/comment/add, commentTo=" + commentTo);
 		return ResultGenerator.genSuccessResult();
 	}

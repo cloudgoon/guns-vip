@@ -59,10 +59,10 @@ import cn.stylefeng.guns.modular.note.dvo.QxUserVo;
 import cn.stylefeng.guns.modular.note.entity.QxLogon;
 import cn.stylefeng.guns.modular.note.entity.QxUser;
 import cn.stylefeng.guns.modular.note.entity.QxUserSocial;
-import cn.stylefeng.guns.modular.note.pojo.QxNotifyUserPojo;
 import cn.stylefeng.guns.modular.note.service.QxFollowService;
 import cn.stylefeng.guns.modular.note.service.QxInviteService;
 import cn.stylefeng.guns.modular.note.service.QxLogonService;
+import cn.stylefeng.guns.modular.note.service.QxNotifyService;
 import cn.stylefeng.guns.modular.note.service.QxUserSocialService;
 import io.rong.models.response.TokenResult;
 import lombok.AllArgsConstructor;
@@ -102,6 +102,9 @@ public class ApiUserController extends ApiBaseController {
 	
 	@Resource
 	private QxLogonService qxLogonService;
+	
+	@Resource
+	private QxNotifyService qxNotifyService;
 	
 	@Resource
 	private NoticeHelper noticeHelper;
