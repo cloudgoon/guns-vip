@@ -114,6 +114,11 @@ public class NoticeHelper {
 		updateNotify(authorUser.getId(), tag);
 	}
 	
+	/**
+	 * 更新提醒
+	 * @param userId
+	 * @param tag
+	 */
 	public void updateNotify(Long userId, int tag) {
 		String column = "";
 		switch(tag) {
@@ -134,7 +139,7 @@ public class NoticeHelper {
 				column = "new_invite";
 				break;
 			default:
-				break;
+				return;
 		}
 		UpdateWrapper<QxNotify> updateWrapper = new UpdateWrapper<QxNotify>();
 		updateWrapper.eq("user_id", userId).set(column, true);

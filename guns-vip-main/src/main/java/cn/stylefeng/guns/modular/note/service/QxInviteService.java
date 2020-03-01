@@ -200,6 +200,11 @@ public interface QxInviteService extends IService<QxInvite> {
 	void closeUnstartInvite();
 	
 	/**
+	 * 提醒准备赴约
+	 */
+	void notifyPrepareStartInvite();
+	
+	/**
 	 * 我报名的约单
 	 * @param page
 	 * @param requestUserId

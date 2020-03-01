@@ -38,5 +38,11 @@ public class SchedulerManager implements SchedulingConfigurer, Runnable{
 		} catch (Exception e) {
 			log.error("定时任务（未开始订单关闭）", e);
 		}
+		// 未开始约单提前提醒
+		try {
+			qxInviteService.notifyPrepareStartInvite();
+		} catch (Exception e) {
+			log.error("定时任务（提醒拼单即将开始）", e);
+		}
 	}
 }

@@ -91,4 +91,13 @@ public interface QxInviteMapper extends BaseMapper<QxInvite> {
     @Select("select a.* from qx_invite a inner join qx_invite_apply b on a.id = b.invite_id and b.status != '2'and b.user_id = #{requestUserId} order by a.invite_time")
     @ResultMap("BaseResultMap")
 	Page myApply(@Param("page")Page page, @Param("requestUserId")Long requestUserId);
+
+    /**
+     * 获取准备开始的约单
+     * @param beforeTime
+     * @return
+     */
+    @Select("SELECT a.* FROM qx_invite a WHERE a.status = 1 AND ADDTIME( now(), #{beforeTime} ) > a.invite_time AND NOW() < a.invite_time AND a.id NOT IN ( SELECT invite_id FROM qx_invite_notify b WHERE ADDTIME( b.created_time, '12:00:00' ) > NOW());")
+    @ResultMap("BaseResultMap")
+	List<QxInvite> getPrepareInviteList(@Param("beforeTime") String beforeTime);
 }

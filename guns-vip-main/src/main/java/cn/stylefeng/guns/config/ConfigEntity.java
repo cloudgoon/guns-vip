@@ -65,6 +65,8 @@ public class ConfigEntity {
 	private int unactiveDays;
 	// 违约金比例
 	private double punishmentRate;
+	// 提前提醒用户约单开始
+	private String inviteBeforeTime;
 	
 	// 短信
 	private String smsDomain;
@@ -82,6 +84,7 @@ public class ConfigEntity {
 	private String eInviteFailTemplate;
 	private String eEmergencyTemplate;
 	private String eNotifyUnactiveUsersTemplate;
+	private String eInvitePrepareTemplate;
 	
 	// 平台联系方式
 	private String platformContact;
@@ -116,6 +119,9 @@ public class ConfigEntity {
 		} else if (SMS_CODE.NOTIFY_UNACTIVE_USERS == tag) {
 			map.put("template", isSms ? smsNotifyUnactiveUsersTemplate : eNotifyUnactiveUsersTemplate);
 			map.put("tagName", "提醒用户");
+		} else if (SMS_CODE.PREPARE_INVITE == tag) {
+			map.put("template", eInvitePrepareTemplate);
+			map.put("tagName", "约单即将开始提醒");
 		} else {
 			map.put("template", isSms ? smsTemplate : eTemplate);
 			map.put("tagName", "验证码");

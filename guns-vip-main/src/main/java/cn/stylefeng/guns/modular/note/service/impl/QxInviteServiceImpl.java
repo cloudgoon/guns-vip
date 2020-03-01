@@ -1,6 +1,7 @@
 package cn.stylefeng.guns.modular.note.service.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -46,11 +47,13 @@ import cn.stylefeng.guns.modular.note.entity.QxGift;
 import cn.stylefeng.guns.modular.note.entity.QxInvite;
 import cn.stylefeng.guns.modular.note.entity.QxInviteApply;
 import cn.stylefeng.guns.modular.note.entity.QxInviteComment;
+import cn.stylefeng.guns.modular.note.entity.QxInviteNotify;
 import cn.stylefeng.guns.modular.note.entity.QxInviteOperate;
 import cn.stylefeng.guns.modular.note.entity.QxUser;
 import cn.stylefeng.guns.modular.note.mapper.QxGiftMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxInviteApplyMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxInviteMapper;
+import cn.stylefeng.guns.modular.note.mapper.QxInviteNotifyMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxInviteOperateMapper;
 import cn.stylefeng.guns.modular.note.mapper.QxUserMapper;
 import cn.stylefeng.guns.modular.note.model.params.QxInviteParam;
@@ -96,6 +99,9 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 
 	@Resource
 	private QxInviteCommentService qxInviteCommentSerivce;
+	
+	@Resource
+	private QxInviteNotifyMapper qxInviteNotifyMapper;
 
 	@Resource
 	private QxAlertService qxAlertService;
@@ -640,6 +646,31 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 			return PUNISH_REASON.INVITEE;
 		} else {
 			throw new ServiceException("约单状态和操作记录不一致");
+		}
+	}
+
+	@Override
+	public void notifyPrepareStartInvite() {
+		List<QxInvite> prepareInviteList = this.baseMapper.getPrepareInviteList(configEntity.getInviteBeforeTime());
+		List<String> userAccounts = new ArrayList<>();  
+		List<Long> inviteIds = new ArrayList<>();
+		for (QxInvite invite : prepareInviteList) {
+			QxUser inviter = qxUserMapper.selectById(invite.getInviter());
+			QxUser invitee = qxUserMapper.selectById(invite.getInvitee());
+			userAccounts.add(inviter.getMobile());
+			userAccounts.add(invitee.getMobile());
+			inviteIds.add(invite.getId());
+		}
+		for (String account : userAccounts) {
+			Map<String, String> pairs = new HashMap<>();
+			Map<String, String> extras = new HashMap<>();
+			noticeHelper.push(account, SMS_CODE.PREPARE_INVITE, pairs, extras);
+			log.info("约单开始提醒已发送: " + account);
+		}
+		for (Long inviteId : inviteIds) {
+			QxInviteNotify entity = new QxInviteNotify();
+			entity.setInviteId(inviteId);
+			qxInviteNotifyMapper.insert(entity);
 		}
 	}
 }

@@ -80,7 +80,7 @@ public final class ProjectConstants {
 
 	/**
 	 * 手机验证码: 0-登录/注册验证码;1-约单成功；2-约单失败；3-紧急报警；4-提醒未活跃用户
-	 * 5-点赞；6-打赏；7-评论；8-粉丝关注
+	 * 5-点赞；6-打赏；7-评论；8-粉丝关注；9-约单即将开始通知
 	 * 
 	 * @author steven
 	 *
@@ -95,6 +95,7 @@ public final class ProjectConstants {
 		int REWARD = 6;
 		int COMMENT = 7;
 		int FOLLOW = 8;
+		int PREPARE_INVITE = 9;
 	}
 
 	/**
