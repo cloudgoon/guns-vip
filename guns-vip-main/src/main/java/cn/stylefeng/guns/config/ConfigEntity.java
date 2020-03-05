@@ -85,6 +85,8 @@ public class ConfigEntity {
 	private String eEmergencyTemplate;
 	private String eNotifyUnactiveUsersTemplate;
 	private String eInvitePrepareTemplate;
+	private String eInviteApplyTemplate;
+	private String eInviteCancelTemplate;
 	
 	// 平台联系方式
 	private String platformContact;
@@ -122,6 +124,12 @@ public class ConfigEntity {
 		} else if (SMS_CODE.PREPARE_INVITE == tag) {
 			map.put("template", eInvitePrepareTemplate);
 			map.put("tagName", "约单即将开始提醒");
+		} else if (SMS_CODE.INVITE_APPLY == tag) {
+			map.put("template", eInviteApplyTemplate);
+			map.put("tagName", "约单报名通知");
+		} else if (SMS_CODE.INVITE_CANCEL == tag) {
+			map.put("template", eInviteCancelTemplate);
+			map.put("tagName", "约单取消通知");
 		} else {
 			map.put("template", isSms ? smsTemplate : eTemplate);
 			map.put("tagName", "验证码");

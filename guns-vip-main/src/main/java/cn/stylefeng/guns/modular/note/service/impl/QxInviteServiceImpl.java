@@ -218,6 +218,11 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 		inviteApply.setInviteId(inviteId);
 		inviteApply.setStatus(INVITE_APPLY_STATUS.UN_SURE);
 		qxInviteApplyMapper.insert(inviteApply);
+		// 发送报名通知
+		QxUser user = qxUserMapper.selectById(invite.getInviter());
+		Map<String, String> pairs = new HashMap<>();
+		Map<String, String> extras = new HashMap<>();
+		noticeHelper.push(user.getMobile(), SMS_CODE.INVITE_APPLY, pairs, extras);
 	}
 
 	@Override
@@ -538,6 +543,19 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 		// 取消约单
 		invite.setStatus(INVITE_STATUS.CANCEl);
 		this.baseMapper.updateById(invite);
+		// 发送取消约单通知
+		notifyCancel(invite.getId());
+	}
+	
+	public void notifyCancel(Long inviteId) {
+		List<QxInviteUserPojo> list = this.baseMapper.getInviteUsers(inviteId);
+		for (QxInviteUserPojo inviteUser : list) {
+			if (INVITE_APPLY_STATUS.REJECT != inviteUser.getStatus()) {
+				Map<String, String> pairs = new HashMap<>();
+				Map<String, String> extras = new HashMap<>();
+				noticeHelper.push(inviteUser.getMobile(), SMS_CODE.INVITE_CANCEL, pairs, extras);
+			}
+		}
 	}
 
 	@Override
