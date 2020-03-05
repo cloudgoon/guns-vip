@@ -100,11 +100,11 @@
     		</if>
     	ORDER BY
     		<choose>
-    			<when test="paramCondition.order == 'time'.toString()">
-    				a.invite_time
+    			<when test="paramCondition.order == 'distance'.toString()">
+    				distance asc
     			</when>
     			<otherwise>
-    				distance asc
+    				a.created_time desc
     			</otherwise>
     		</choose>
     </select>
