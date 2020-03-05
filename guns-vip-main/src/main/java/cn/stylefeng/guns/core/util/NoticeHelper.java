@@ -2,6 +2,7 @@ package cn.stylefeng.guns.core.util;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
@@ -92,24 +93,10 @@ public class NoticeHelper {
 		return false;
 	}
 	
-	public void saveNoteNotice(Long requestUserId, QxNote note, int tag) {
+	public void saveNoteNotice(Long requestUserId, Long authorUserId, int tag, Map<String, Object>extras) {
 		// 添加消息
-		QxUser actionUser = userMapper.selectById(requestUserId);
-		QxUser authorUser = userMapper.selectById(note.getUserId());
-		String content = "";
-		switch (tag) {
-			case SMS_CODE.LIKE:
-				content = actionUser.getNickname() + "点赞了您的日记;note_id=" + note.getId();
-				break;
-			case SMS_CODE.REWARD:
-				content = actionUser.getNickname() + "打赏了您的日记;note_id=" + note.getId();
-				break;
-			case SMS_CODE.COMMENT:
-				content = actionUser.getNickname() + "评论了您的日记;note_id=" + note.getId();
-				break;
-			default:
-				break;
-		}
+		QxUser authorUser = userMapper.selectById(authorUserId);
+		String content = extras.entrySet().stream().map(n -> n.getKey() + "=" + n.getValue()).collect(Collectors.joining(";"));
 		saveNotice(authorUser.getMobile(), content, tag, NOTICE_TYPE.PUSH, new Date());
 		updateNotify(authorUser.getId(), tag);
 	}

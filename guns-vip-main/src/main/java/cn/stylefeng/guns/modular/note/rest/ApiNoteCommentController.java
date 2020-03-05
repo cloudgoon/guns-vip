@@ -1,7 +1,9 @@
 package cn.stylefeng.guns.modular.note.rest;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 
@@ -21,8 +23,10 @@ import cn.stylefeng.guns.core.util.NoticeHelper;
 import cn.stylefeng.guns.modular.note.dto.QxNoteCommentTo;
 import cn.stylefeng.guns.modular.note.dvo.QxNoteCommentVo;
 import cn.stylefeng.guns.modular.note.dvo.QxTweetCommentVo;
+import cn.stylefeng.guns.modular.note.entity.QxGift;
 import cn.stylefeng.guns.modular.note.entity.QxNote;
 import cn.stylefeng.guns.modular.note.entity.QxNoteComment;
+import cn.stylefeng.guns.modular.note.entity.QxUser;
 import cn.stylefeng.guns.modular.note.service.QxNoteCommentService;
 import cn.stylefeng.guns.modular.note.service.QxNoteService;
 import lombok.extern.slf4j.Slf4j;
@@ -80,8 +84,17 @@ public class ApiNoteCommentController extends ApiBaseController {
 		BeanUtils.copyProperties(commentTo, noteComment);
 		noteComment.setCreatedBy(getRequestUserId());
 		qxNoteCommentService.save(noteComment);
+		// 添加消息
+		Map<String, Object> extras = new HashMap<>();
+		QxUser operator = getUser();
 		QxNote note = qxNoteService.getById(commentTo.getNoteId());
-		noticeHelper.saveNoteNotice(getRequestUserId(), note, SMS_CODE.COMMENT);
+		extras.put("userId", operator.getId());
+		extras.put("avatar", operator.getAvatar());
+		extras.put("nickname", operator.getNickname());
+		extras.put("noteId", note.getId());
+		extras.put("notePics", note.getImages());
+		extras.put("comment", commentTo.getContent());
+		noticeHelper.saveNoteNotice(getRequestUserId(), note.getUserId(), SMS_CODE.COMMENT, extras);
 		log.info("/api/note/comment/add, commentTo=" + commentTo);
 		return ResultGenerator.genSuccessResult();
 	}

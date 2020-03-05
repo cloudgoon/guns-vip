@@ -1,8 +1,9 @@
 package cn.stylefeng.guns.modular.note.service.impl;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 
@@ -16,7 +17,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import cn.stylefeng.guns.base.pojo.page.LayuiPageFactory;
 import cn.stylefeng.guns.base.pojo.page.LayuiPageInfo;
-import cn.stylefeng.guns.core.constant.ProjectConstants.NOTICE_TYPE;
 import cn.stylefeng.guns.core.constant.ProjectConstants.SMS_CODE;
 import cn.stylefeng.guns.core.constant.ProjectConstants.USER_PAY_LOG_TYPE;
 import cn.stylefeng.guns.core.exception.ServiceException;
@@ -141,7 +141,18 @@ public class QxNoteServiceImpl extends ServiceImpl<QxNoteMapper, QxNote> impleme
 		// 自动添加打赏评论
 		addOfficalComment(requestUserId, noteId, giftId, false);
 		// 添加消息
-		noticeHelper.saveNoteNotice(requestUserId, note, SMS_CODE.REWARD);
+		Map<String, Object> extras = new HashMap<>();
+		QxUser operator = qxUserMapper.selectById(requestUserId);
+		QxGift gift = qxGiftMapper.selectById(giftId);
+		extras.put("userId", operator.getId());
+		extras.put("avatar", operator.getAvatar());
+		extras.put("nickname", operator.getNickname());
+		extras.put("noteId", note.getId());
+		extras.put("notePics", note.getImages());
+		extras.put("giftName", gift.getName());
+		extras.put("giftImage", gift.getImage());
+		extras.put("giftPrice", gift.getPrice());
+		noticeHelper.saveNoteNotice(requestUserId, note.getUserId(), SMS_CODE.REWARD, extras);
 	}
 	
 	/**
@@ -203,7 +214,14 @@ public class QxNoteServiceImpl extends ServiceImpl<QxNoteMapper, QxNote> impleme
 		note.setFavoriteCount(note.getFavoriteCount() + 1);
 		this.updateById(note);
 		// 添加消息
-		noticeHelper.saveNoteNotice(requestUserId, note, SMS_CODE.LIKE);
+		Map<String, Object> extras = new HashMap<>();
+		QxUser operator = qxUserMapper.selectById(requestUserId);
+		extras.put("userId", operator.getId());
+		extras.put("avatar", operator.getAvatar());
+		extras.put("nickname", operator.getNickname());
+		extras.put("noteId", note.getId());
+		extras.put("notePics", note.getImages());
+		noticeHelper.saveNoteNotice(requestUserId, note.getUserId(), SMS_CODE.LIKE, extras);
 		
 		return note;
 	}

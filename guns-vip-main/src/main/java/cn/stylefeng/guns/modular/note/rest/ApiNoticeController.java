@@ -111,13 +111,11 @@ public class ApiNoticeController extends ApiBaseController {
 		Map<String, Object> extras = new HashMap<>();
 		vo.setId(notice.getId());
 		vo.setCreatedTime(notice.getCreatedTime());
-		List<String> contentArray = new ArrayList<String>(Arrays.asList(notice.getContent().split(";")));
-		List<String> extraArray = contentArray.subList(1, contentArray.size());
+		List<String> extraArray = new ArrayList<String>(Arrays.asList(notice.getContent().split(";")));
 		for (String item : extraArray) {
 			String[] itemArray = item.split("=");
 			extras.put(itemArray[0], itemArray[1]);
 		}
-		vo.setContent(contentArray.get(0));
 		vo.setExtras(extras);
 		return vo;
 	}
