@@ -270,14 +270,17 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 		rejectModel.setStatus(INVITE_APPLY_STATUS.REJECT);
 		qxInviteApplyMapper.update(rejectModel, rejectUpdateWrapper);
 
-		// 如果是TA请客，则在报名时，需将金币退还至原账户
 		QxInvite invite = this.baseMapper.selectById(inviteId);
-		if (INVITE_TYPE.PASSIVE.equals(invite.getInviteType())) {
-			List<QxInviteUserPojo> list = this.baseMapper.getInviteUsers(inviteId);
-			for (QxInviteUserPojo inviteUser : list) {
-				if (INVITE_APPLY_STATUS.REJECT.equals(inviteUser.getStatus())) {
-					// 解冻对应金币
+		List<QxInviteUserPojo> list = this.baseMapper.getInviteUsers(inviteId);
+		for (QxInviteUserPojo inviteUser : list) {
+			if (INVITE_APPLY_STATUS.REJECT.equals(inviteUser.getStatus())) {
+				if (INVITE_TYPE.PASSIVE.equals(invite.getInviteType())) {
+					// 如果是TA请客，则在报名时，需将金币退还至原账户
 					qxCoinHelper.unfreeze(inviteUser.getUserId(), invite.getGiftId());
+				} else {
+					// 我请客，解冻报名押金
+					int punishCoin = qxCoinHelper.getPunishCoin(invite.getGiftId());
+					qxCoinHelper.freezeCoin(inviteUser.getUserId(), punishCoin);
 				}
 			}
 		}
