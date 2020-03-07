@@ -125,7 +125,7 @@ public class QxWithdrawLogServiceImpl extends ServiceImpl<QxWithdrawLogMapper, Q
 		entity.setStatus(WITHDRAW_STATUS.WAIT_OUT);
 		this.baseMapper.insert(entity);
 		// 冻结用户金额
-		qxCoinHelper.freezeCoin(user.getId(), withdrawCoinCount);
+		qxCoinHelper.freezeCoin(user.getId(), withdrawCoinCount, USER_PAY_LOG_TYPE.WITHDRAW_COIN_OUT);
 		return entity;
 	}
 
@@ -149,6 +149,6 @@ public class QxWithdrawLogServiceImpl extends ServiceImpl<QxWithdrawLogMapper, Q
 		user.setFreeze(user.getFreeze() - coinCount);
 		qxUserMapper.updateById(user);
 		// 更新用户流水
-		qxPayLogHelper.createPayLog(user.getId(), coinCount, USER_PAY_LOG_TYPE.WITHDRAW_COIN_IN);
+//		qxPayLogHelper.createPayLog(user.getId(), coinCount, USER_PAY_LOG_TYPE.WITHDRAW_COIN_IN);
 	}
 }

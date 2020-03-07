@@ -169,8 +169,8 @@ public final class ProjectConstants {
 
 	/**
 	 * 用户费用类型： 0-约单支出；1-约单汇入；2-打赏支出；3-打赏汇入；4-兑换商品支出；
-	 * 5-购买礼物支出；6-付费日记支出；7-付费日记汇入；8-违约金支出； 9-违约金汇入；10-购买金币支出；11-金币提现汇入；
-	 * 12-平台代买金币支出;
+	 * 5-购买礼物支出；6-付费日记支出；7-付费日记汇入；8-违约金支出； 9-违约金汇入；10-购买金币支出；11-金币提现支出；
+	 * 12-平台代买金币支出;13-约单退回；
 	 * @author steven
 	 *
 	 */
@@ -186,7 +186,7 @@ public final class ProjectConstants {
 		String COMPENSATION_OUT = "8";
 		String COMPENSATION_IN = "9";
 		String BUY_COIN_OUT = "10";
-		String WITHDRAW_COIN_IN = "11";
+		String WITHDRAW_COIN_OUT = "11";
 		String PLATFORM_BUY_COIN_OUT = "12";
 	}
 
@@ -203,7 +203,7 @@ public final class ProjectConstants {
 		FINANCE_LOG_MAP.put(USER_PAY_LOG_TYPE.COMPENSATION_OUT, "违约金支出");
 		FINANCE_LOG_MAP.put(USER_PAY_LOG_TYPE.COMPENSATION_IN, "违约金汇入");
 		FINANCE_LOG_MAP.put(USER_PAY_LOG_TYPE.BUY_COIN_OUT, "购买金币支出");
-		FINANCE_LOG_MAP.put(USER_PAY_LOG_TYPE.WITHDRAW_COIN_IN, "金币提现汇入");
+		FINANCE_LOG_MAP.put(USER_PAY_LOG_TYPE.WITHDRAW_COIN_OUT, "金币提现支出");
 		FINANCE_LOG_MAP.put(USER_PAY_LOG_TYPE.PLATFORM_BUY_COIN_OUT, "平台代买金币支出");
 	}
 

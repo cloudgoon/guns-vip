@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import cn.stylefeng.guns.config.ConfigEntity;
 import cn.stylefeng.guns.core.CommonUtils;
 import cn.stylefeng.guns.core.constant.ProjectConstants.COST_RATE_TYPE;
+import cn.stylefeng.guns.core.constant.ProjectConstants.USER_PAY_LOG_TYPE;
 import cn.stylefeng.guns.core.exception.ServiceException;
 import cn.stylefeng.guns.modular.note.dto.QxPayResult;
 import cn.stylefeng.guns.modular.note.entity.QxCostRate;
@@ -90,6 +91,9 @@ public class QxCoinHelper {
 		payeeUser.setBalance(payeeUser.getBalance() + coin);
 		qxUserMapper.updateById(payUser);
 		qxUserMapper.updateById(payeeUser);
+		// 记录日志
+		qxPayLogHelper.createPayLog(payerId, coin, USER_PAY_LOG_TYPE.COMPENSATION_OUT);
+		qxPayLogHelper.createPayLog(payeeId, coin, USER_PAY_LOG_TYPE.COMPENSATION_IN);
 
 		QxPayResult payResult = new QxPayResult();
 		payResult.setSn(CommonUtils.getSerialNumber());
@@ -138,18 +142,19 @@ public class QxCoinHelper {
 	 * 
 	 * @param user
 	 * @param amount
+	 * @param type
 	 */
-	public void freeze(Long userId, Long giftId) {
+	public void freeze(Long userId, Long giftId, String type) {
 		QxGift gift = qxGiftMapper.selectById(giftId);
-		freezeCoin(userId, gift.getPrice());
+		freezeCoin(userId, gift.getPrice(), type);
 	}
 
 	/**
 	 * 解冻礼物金币
 	 */
-	public void unfreeze(Long userId, Long giftId) {
+	public void unfreeze(Long userId, Long giftId, String type) {
 		QxGift gift = qxGiftMapper.selectById(giftId);
-		unfreezeCoin(userId, gift.getPrice());
+		unfreezeCoin(userId, gift.getPrice(), type);
 	}
 	
 	/**
@@ -157,7 +162,7 @@ public class QxCoinHelper {
 	 * @param userId
 	 * @param coinCount
 	 */
-	public void freezeCoin(Long userId, Integer coinCount) {
+	public void freezeCoin(Long userId, Integer coinCount, String type) {
 		QxUser user = qxUserMapper.selectById(userId);
 		if (user.getBalance() < coinCount) {
 			throw new ServiceException("金币不足，请充值");
@@ -165,12 +170,13 @@ public class QxCoinHelper {
 		user.setBalance(user.getBalance() - coinCount);
 		user.setFreeze(user.getFreeze() + coinCount);
 		qxUserMapper.updateById(user);
+		qxPayLogHelper.createPayLog(userId, coinCount, type);
 	}
 	
 	/**
 	 * 解冻金币
 	 */
-	public void unfreezeCoin(Long userId, Integer coinCount) {
+	public void unfreezeCoin(Long userId, Integer coinCount, String type) {
 		QxUser user = qxUserMapper.selectById(userId);
 		if (user.getFreeze() < coinCount) {
 			throw new ServiceException("冻结金币不足，无法解冻");
@@ -178,6 +184,7 @@ public class QxCoinHelper {
 		user.setBalance(user.getBalance() + coinCount);
 		user.setFreeze(user.getFreeze() - coinCount);
 		qxUserMapper.updateById(user);
+		qxPayLogHelper.createPayLog(userId, coinCount, type);
 	}
 	
 	/**
