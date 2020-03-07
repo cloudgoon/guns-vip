@@ -526,38 +526,61 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 		if (!(INVITE_STATUS.WAIT_MATCH.equals(inviteStatus) || INVITE_STATUS.MATCHED.equals(inviteStatus))) {
 			throw new ServiceException("约单已开始，不能取消");
 		}
-		// 检查是否是自己约单
-		if (!invite.getInviter().equals(requestUserId)) {
-			throw new ServiceException("只能取消自己的约单");
+		// 获得取消方
+		String reason = null;
+		if (invite.getInviter().equals(requestUserId)) {
+			reason = PUNISH_REASON.INVITER;
+		} else {
+			reason = PUNISH_REASON.INVITEE;
 		}
+		// 约单未配对，只能发起人取消
 		if (INVITE_STATUS.WAIT_MATCH.equals(inviteStatus)) {
-			// 未配对
+			List<QxInviteUserPojo> list = this.baseMapper.getInviteUsers(invite.getId());
 			if (INVITE_TYPE.ACTIVE.equals(invite.getInviteType())) {
 				// 主动约，解冻发起人金币；
 				qxCoinHelper.unfreeze(invite.getInviter(), invite.getGiftId());
+				// 解冻报名人违约金
+				for (QxInviteUserPojo inviteUser : list) {
+					qxCoinHelper.unfreezeCoin(inviteUser.getUserId(), punishCoin);
+				}
 			} else {
 				// 被动约，解冻发起人违约金
 				qxCoinHelper.unfreezeCoin(invite.getInviter(), punishCoin);
+				// 解冻报名人礼物
+				for (QxInviteUserPojo inviteUser : list) {
+					qxCoinHelper.unfreeze(inviteUser.getUserId(), invite.getGiftId());
+				}
 			}
 		} else {
-			// 已配对，惩罚发起人
-			handleUnstartPunish(invite, PUNISH_REASON.INVITER);
+			// 约单已配对，双发均可取消
+			handleUnstartPunish(invite, reason);
 		}
+		// 发送取消约单通知
+		notifyInviteCancel(invite, reason);
 		// 取消约单
 		invite.setStatus(INVITE_STATUS.CANCEl);
 		this.baseMapper.updateById(invite);
-		// 发送取消约单通知
-		notifyCancel(invite.getId());
 	}
 	
-	public void notifyCancel(Long inviteId) {
-		List<QxInviteUserPojo> list = this.baseMapper.getInviteUsers(inviteId);
-		for (QxInviteUserPojo inviteUser : list) {
-			if (INVITE_APPLY_STATUS.REJECT != inviteUser.getStatus()) {
-				Map<String, String> pairs = new HashMap<>();
-				Map<String, String> extras = new HashMap<>();
-				noticeHelper.push(inviteUser.getMobile(), SMS_CODE.INVITE_CANCEL, pairs, extras);
+	public void notifyInviteCancel(QxInvite invite, String reason) {
+		if (PUNISH_REASON.INVITER.equals(reason)) {
+			// 发起人取消，通知报名人
+			List<QxInviteUserPojo> list = this.baseMapper.getInviteUsers(invite.getId());
+			for (QxInviteUserPojo inviteUser : list) {
+				if (INVITE_APPLY_STATUS.REJECT != inviteUser.getStatus()) {
+					Map<String, String> pairs = new HashMap<>();
+					pairs.put("operate", "报名");
+					Map<String, String> extras = new HashMap<>();
+					noticeHelper.push(inviteUser.getMobile(), SMS_CODE.INVITE_CANCEL, pairs, extras);
+				}
 			}
+		} else {
+			// 报名人取消，通知发起人
+			Map<String, String> pairs = new HashMap<>();
+			pairs.put("operate", "发起");
+			Map<String, String> extras = new HashMap<>();
+			QxUser inviter = qxUserMapper.selectById(invite.getInviter());
+			noticeHelper.push(inviter.getMobile(), SMS_CODE.INVITE_CANCEL, pairs, extras);
 		}
 	}
 
