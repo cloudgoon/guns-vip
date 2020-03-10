@@ -96,7 +96,7 @@ public class ApiInviteController extends ApiBaseController {
 			throw new ServiceException("邀请对象不能是本人");
 		}
 		// 检测每日约单最大次数
-		checkMaxInvite(getRequestUserId());
+		// checkMaxInvite(getRequestUserId());
 		qxInviteService.addInvite(getRequestUserId(), inviteTo);
 		log.info("/api/invite/add, inviteTo=" + inviteTo);
 		return ResultGenerator.genSuccessResult();
@@ -216,7 +216,7 @@ public class ApiInviteController extends ApiBaseController {
 			throw new ServiceException("该拼单已结束，不能报名");
 		}
 		// 检测每日报名最大限制
-		checkMaxApply(currentUserId);
+//		checkMaxApply(currentUserId);
 		qxInviteService.apply(currentUserId, inviteId);
 		log.info("/api/invite/apply, inviteId=" + inviteId);
 		return ResultGenerator.genSuccessResult();
@@ -238,7 +238,7 @@ public class ApiInviteController extends ApiBaseController {
 		if (!INVITE_STATUS.WAIT_MATCH.equals(invite.getStatus())) {
 			throw new ServiceException("报名已结束，不能选择报名者");
 		}
-		checkMaxInviteOperate(userId, INVITE_OPERATE_TYPE.CHOOSE_APPLY);
+//		checkMaxInviteOperate(userId, INVITE_OPERATE_TYPE.CHOOSE_APPLY);
 		qxInviteService.choose(inviteId, userId);
 		log.info("/api/invite/choose, inviteId=" + inviteId + ", userId=" + userId);
 		return ResultGenerator.genSuccessResult();
@@ -251,7 +251,7 @@ public class ApiInviteController extends ApiBaseController {
 		if (!INVITE_STATUS.WAIT_MATCH.equals(invite.getStatus())) {
 			throw new ServiceException("不能重复同意");
 		}
-		checkMaxInviteOperate(getRequestUserId(), INVITE_OPERATE_TYPE.AGREE_INVITE);
+//		checkMaxInviteOperate(getRequestUserId(), INVITE_OPERATE_TYPE.AGREE_INVITE);
 		qxInviteService.agree(inviteId);
 		log.info("/api/invite/agree, inviteId=" + inviteId);
 		return ResultGenerator.genSuccessResult();
