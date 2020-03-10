@@ -280,7 +280,7 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 				} else {
 					// 我请客，解冻报名押金
 					int punishCoin = qxCoinHelper.getPunishCoin(invite.getGiftId());
-					qxCoinHelper.freezeCoin(inviteUser.getUserId(), punishCoin, USER_PAY_LOG_TYPE.COMPENSATION_IN);
+					qxCoinHelper.unfreezeCoin(inviteUser.getUserId(), punishCoin, USER_PAY_LOG_TYPE.COMPENSATION_IN);
 				}
 			}
 		}
