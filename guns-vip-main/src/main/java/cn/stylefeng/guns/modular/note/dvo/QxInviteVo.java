@@ -40,6 +40,8 @@ public class QxInviteVo {
 	private QxGift gift;
 	// 约会类型
 	private QxDateType dateType;
+	// 违约金
+	private int punishCoin;
 
 	public String getLocation() {
 		return Stream.of(province, city, district, street, streetNumber, shop).filter(s -> s != null)

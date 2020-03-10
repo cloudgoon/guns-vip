@@ -30,6 +30,7 @@ import cn.stylefeng.guns.modular.note.dvo.QxUserVo;
 import cn.stylefeng.guns.modular.note.entity.QxComplaint;
 import cn.stylefeng.guns.modular.note.entity.QxDateType;
 import cn.stylefeng.guns.modular.note.entity.QxEmergency;
+import cn.stylefeng.guns.modular.note.entity.QxGift;
 import cn.stylefeng.guns.modular.note.entity.QxInvite;
 import cn.stylefeng.guns.modular.note.entity.QxInviteApply;
 import cn.stylefeng.guns.modular.note.entity.QxInviteComment;
@@ -45,6 +46,7 @@ import cn.stylefeng.guns.modular.note.service.QxInviteApplyService;
 import cn.stylefeng.guns.modular.note.service.QxInviteCommentService;
 import cn.stylefeng.guns.modular.note.service.QxInviteOperateService;
 import cn.stylefeng.guns.modular.note.service.QxInviteService;
+import cn.stylefeng.guns.modular.note.service.impl.QxCoinHelper;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -75,6 +77,9 @@ public class ApiInviteController extends ApiBaseController {
 	
 	@Resource
 	private QxGiftService qxGiftService;
+	
+	@Resource
+	private QxCoinHelper qxCoinHelper;
 
 	/**
 	 * 约单四种： 
@@ -180,6 +185,7 @@ public class ApiInviteController extends ApiBaseController {
 		BeanUtils.copyProperties(invite, vo);
 		vo.setUserVo(createQxUserVo(getUser(invite.getInviter())));
 		vo.setGift(qxGiftService.getById(invite.getGiftId()));
+		vo.setPunishCoin(qxCoinHelper.getPunishCoin(invite.getGiftId()));
 		vo.setDateType(qxDateTypeService.getById(invite.getDateTypeId()));
 		vo.setRemainDays(DateUtils.getIntervalDays(invite.getInviteTime(), new Date()));
 		return vo;
