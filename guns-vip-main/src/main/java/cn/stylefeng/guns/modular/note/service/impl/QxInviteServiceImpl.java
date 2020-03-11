@@ -627,7 +627,7 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 	@Override
 	public void closeUnstartInvite() {
 		QueryWrapper<QxInvite> queryWrapper = new QueryWrapper<QxInvite>();
-		queryWrapper.eq("status", INVITE_STATUS.MATCHED).lt("invite_time", DateUtils.addHour(new Date(), -1));
+		queryWrapper.eq("status", INVITE_STATUS.MATCHED).lt("invite_time", DateUtils.addHour(new Date(), -3));
 		List<QxInvite> unfinishedInvites = this.baseMapper.selectList(queryWrapper);
 		for (QxInvite invite : unfinishedInvites) {
 			String reason = checkPunishReason(invite);
