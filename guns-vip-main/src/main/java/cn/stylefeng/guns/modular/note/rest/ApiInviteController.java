@@ -30,7 +30,6 @@ import cn.stylefeng.guns.modular.note.dvo.QxUserVo;
 import cn.stylefeng.guns.modular.note.entity.QxComplaint;
 import cn.stylefeng.guns.modular.note.entity.QxDateType;
 import cn.stylefeng.guns.modular.note.entity.QxEmergency;
-import cn.stylefeng.guns.modular.note.entity.QxGift;
 import cn.stylefeng.guns.modular.note.entity.QxInvite;
 import cn.stylefeng.guns.modular.note.entity.QxInviteApply;
 import cn.stylefeng.guns.modular.note.entity.QxInviteComment;
@@ -202,8 +201,7 @@ public class ApiInviteController extends ApiBaseController {
 	@RequestMapping("/dateTypes")
 	public Object dateTypes() {
 		QueryWrapper<QxDateType> queryWrapper = new QueryWrapper<QxDateType>();
-		queryWrapper.ge("id", 0);
-		queryWrapper.orderByAsc("order_no");
+		queryWrapper.eq("deleted", false).orderByAsc("order_no");
 		List<QxDateType> list = qxDateTypeService.list(queryWrapper);
 		log.info("/api/invite/dateTypes");
 		return ResultGenerator.genSuccessResult(list);

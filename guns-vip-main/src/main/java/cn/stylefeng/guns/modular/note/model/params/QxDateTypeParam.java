@@ -49,6 +49,11 @@ public class QxDateTypeParam implements Serializable, BaseValidatingParam {
      * 更新时间
      */
     private Date updatedTime;
+    
+    /**
+     * 删除标志
+     */
+    private Boolean deleted;
 
     /**
      * 名称

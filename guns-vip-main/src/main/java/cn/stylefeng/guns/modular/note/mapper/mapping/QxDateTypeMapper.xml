@@ -10,13 +10,14 @@
         <result column="created_time" property="createdTime" />
         <result column="updated_by" property="updatedBy" />
         <result column="updated_time" property="updatedTime" />
+        <result column="deleted" property="deleted" />
         <result column="name" property="name" />
         <result column="order_no" property="orderNo" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id AS "id", version AS "version", created_by AS "createdBy", created_time AS "createdTime", updated_by AS "updatedBy", updated_time AS "updatedTime", name AS "name", order_no AS "orderNo"
+        id AS "id", version AS "version", created_by AS "createdBy", created_time AS "createdTime", updated_by AS "updatedBy", updated_time AS "updatedTime", deleted AS "deleted", name AS "name", order_no AS "orderNo"
     </sql>
 
 
@@ -35,7 +36,7 @@
     <select id="customPageList" resultType="cn.stylefeng.guns.modular.note.model.result.QxDateTypeResult" parameterType="cn.stylefeng.guns.modular.note.model.params.QxDateTypeParam">
         select
         <include refid="Base_Column_List"/>
-        from qx_date_type where 1 = 1
+        from qx_date_type where deleted = 0
     </select>
 
     <select id="customPageMapList" resultType="map" parameterType="cn.stylefeng.guns.modular.note.model.params.QxDateTypeParam">

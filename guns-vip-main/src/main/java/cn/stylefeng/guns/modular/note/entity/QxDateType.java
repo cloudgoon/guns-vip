@@ -55,6 +55,12 @@ public class QxDateType implements Serializable {
      */
     @TableField("updated_time")
     private Date updatedTime;
+    
+    /**
+     * 删除标识
+     */
+    @TableField("deleted")
+    private Boolean deleted;
 
     /**
      * 名称
@@ -133,7 +139,15 @@ public class QxDateType implements Serializable {
         this.orderNo = orderNo;
     }
 
-    @Override
+    public Boolean getDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(Boolean deleted) {
+		this.deleted = deleted;
+	}
+
+	@Override
     public String toString() {
         return "QxDateType{" +
         "id=" + id +

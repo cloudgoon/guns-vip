@@ -3,6 +3,7 @@ package cn.stylefeng.guns.modular.note.service.impl;
 import cn.stylefeng.guns.base.pojo.page.LayuiPageFactory;
 import cn.stylefeng.guns.base.pojo.page.LayuiPageInfo;
 import cn.stylefeng.guns.modular.note.entity.QxDateType;
+import cn.stylefeng.guns.modular.note.entity.QxGift;
 import cn.stylefeng.guns.modular.note.mapper.QxDateTypeMapper;
 import cn.stylefeng.guns.modular.note.model.params.QxDateTypeParam;
 import cn.stylefeng.guns.modular.note.model.result.QxDateTypeResult;
@@ -35,7 +36,9 @@ public class QxDateTypeServiceImpl extends ServiceImpl<QxDateTypeMapper, QxDateT
 
     @Override
     public void delete(QxDateTypeParam param){
-        this.removeById(getKey(param));
+    	QxDateType entity = getOldEntity(param);
+		entity.setDeleted(true);
+		this.updateById(entity);
     }
 
     @Override

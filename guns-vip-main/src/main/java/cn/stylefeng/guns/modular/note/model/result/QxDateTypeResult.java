@@ -48,6 +48,11 @@ public class QxDateTypeResult implements Serializable {
      * 更新时间
      */
     private Date updatedTime;
+    
+    /**
+     * 删除标志
+     */
+    private Boolean deleted;
 
     /**
      * 名称
