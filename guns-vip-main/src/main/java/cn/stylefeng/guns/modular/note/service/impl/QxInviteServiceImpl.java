@@ -493,10 +493,9 @@ public class QxInviteServiceImpl extends ServiceImpl<QxInviteMapper, QxInvite> i
 	}
 
 	public void sendAlert(QxInvite invite, QxUser currentUser, QxUser otherUser, String emergencyContact) {
-		// 用户${contact}向您发送了一键报警，请及时联系对方或平台${platformContact}进行处理
+		// 用户${contact}向您发送了一键报警，请及时与对方联系
 		Map<String, String> pairs = new HashMap<>();
 		pairs.put("contact", currentUser.getMobile());
-		pairs.put("platformContact", configEntity.getPlatformContact());
 		noticeHelper.send(emergencyContact, SMS_CODE.EMERGENCY, pairs);
 	}
 
